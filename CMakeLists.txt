@@ -6,6 +6,8 @@ find_package(catkin REQUIRED COMPONENTS console_bridge rosconsole)
 include_directories(include ${catkin_INCLUDE_DIRS})
 link_directories(${catkin_LIBRARY_DIRS})
 
+find_package(Boost REQUIRED regex)
+
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
@@ -13,9 +15,12 @@ catkin_package(
   DEPENDS console_bridge 
 )
 
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+link_directories(${Boost_LIBRARY_DIRS})
+
 add_library(${PROJECT_NAME} src/bridge.cpp)
 
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 install(
   TARGETS ${PROJECT_NAME}

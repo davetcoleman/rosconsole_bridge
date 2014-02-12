@@ -41,29 +41,25 @@
 namespace rosconsole_bridge
 {
 
+static const boost::regex regex_format("([A-Za-z0-9._]+): (.*?)"); 
+
 OutputHandlerROS::OutputHandlerROS(void) : OutputHandler()
 {
 }
   
 void OutputHandlerROS::log(const std::string &text, console_bridge::LogLevel level, const char *filename, int line)
 {
-  std::string prefix;
-
-  // Check for fake subprefix name defiend as text output "package.prefix: message"
-  // TODO: turn this into a regex that matches the rule: "[no spaces]: message"
-  size_t sub_index = text.find(": ");
-  static const std::size_t LENGTH_OF_MARKER = 2;
-
-  if (sub_index != std::string::npos && text.length() >= LENGTH_OF_MARKER)
+  // Check for fake subprefix name defined as text output "package.prefix: message"
+  if (boost::regex_match(text, text_parsed_, regex_format) && text_parsed_.size() == 3)
   {
-    prefix = std::string(ROSCONSOLE_NAME_PREFIX) + "." + text.substr(0, sub_index);
-    // update the sub_index to allow us to later remove the prefix from the message
-    sub_index += LENGTH_OF_MARKER;
+    prefix_ = std::string(ROSCONSOLE_NAME_PREFIX) + "." + text_parsed_[1];
+    message_ = text_parsed_[2];
   }
   else
   {
-    prefix = std::string(ROSCONSOLE_NAME_PREFIX) + ".console_bridge";
-    sub_index = 0;
+    // No special format detected
+    prefix_ = std::string(ROSCONSOLE_NAME_PREFIX) + ".console_bridge";
+    message_ = text;
   }
 
   // Handle different logging levels
@@ -71,43 +67,39 @@ void OutputHandlerROS::log(const std::string &text, console_bridge::LogLevel lev
   {
   case console_bridge::CONSOLE_BRIDGE_LOG_INFO: 
     {
-      ROSCONSOLE_DEFINE_LOCATION(true, ::ros::console::levels::Info, prefix);
+      ROSCONSOLE_DEFINE_LOCATION(true, ::ros::console::levels::Info, prefix_);
 
       if (ROS_UNLIKELY(enabled))
       {
-        ::ros::console::print(NULL, loc.logger_, loc.level_, filename, line, "", "%s",
-          text.substr(sub_index, std::string::npos).c_str());
+        ::ros::console::print(NULL, loc.logger_, loc.level_, filename, line, "", "%s", message_.c_str());
       }    
     }
     break;
   case console_bridge::CONSOLE_BRIDGE_LOG_WARN:
     {
-      ROSCONSOLE_DEFINE_LOCATION(true, ::ros::console::levels::Warn, prefix);
+      ROSCONSOLE_DEFINE_LOCATION(true, ::ros::console::levels::Warn, prefix_);
       if (ROS_UNLIKELY(enabled))
       {
-        ::ros::console::print(NULL, loc.logger_, loc.level_, filename, line, "", "%s",
-          text.substr(sub_index, std::string::npos).c_str());
+        ::ros::console::print(NULL, loc.logger_, loc.level_, filename, line, "", "%s", message_.c_str());
       }    
     }
     break;
   case console_bridge::CONSOLE_BRIDGE_LOG_ERROR:
     {
-      ROSCONSOLE_DEFINE_LOCATION(true, ::ros::console::levels::Error, prefix);
+      ROSCONSOLE_DEFINE_LOCATION(true, ::ros::console::levels::Error, prefix_);
       if (ROS_UNLIKELY(enabled))
       {
-        ::ros::console::print(NULL, loc.logger_, loc.level_, filename, line, "", "%s",
-          text.substr(sub_index, std::string::npos).c_str());
+        ::ros::console::print(NULL, loc.logger_, loc.level_, filename, line, "", "%s", message_.c_str());
       }    
     }
     break;
   default:
     // debug
     {
-      ROSCONSOLE_DEFINE_LOCATION(true, ::ros::console::levels::Debug, prefix);
+      ROSCONSOLE_DEFINE_LOCATION(true, ::ros::console::levels::Debug, prefix_);
       if (ROS_UNLIKELY(enabled))
       {
-        ::ros::console::print(NULL, loc.logger_, loc.level_, filename, line, "", " %s",
-          text.substr(sub_index, std::string::npos).c_str());
+        ::ros::console::print(NULL, loc.logger_, loc.level_, filename, line, "", " %s", message_.c_str());
       }    
     }
     break;

@@ -38,6 +38,7 @@
 #define ROSCONSOLE_BRIDGE_
 
 #include <console_bridge/console.h>
+#include <boost/regex.hpp> 
 
 namespace rosconsole_bridge
 {
@@ -47,6 +48,11 @@ class OutputHandlerROS : public console_bridge::OutputHandler
 public:
   OutputHandlerROS(void);
   virtual void log(const std::string &text, console_bridge::LogLevel level, const char *filename, int line);
+private:
+  // Pre-allocate this memory
+  std::string prefix_;
+  std::string message_;
+  boost::match_results<std::string::const_iterator> text_parsed_;
 };
 
 struct RegisterOutputHandlerProxy

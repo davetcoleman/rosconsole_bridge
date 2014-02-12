@@ -54,7 +54,7 @@ void OutputHandlerROS::log(const std::string &text, console_bridge::LogLevel lev
   size_t sub_index = text.find(": ");
   static const std::size_t LENGTH_OF_MARKER = 2;
 
-  if(sub_index != std::string::npos && text.length() >= LENGTH_OF_MARKER)
+  if (sub_index != std::string::npos && text.length() >= LENGTH_OF_MARKER)
   {
     prefix = std::string(ROSCONSOLE_NAME_PREFIX) + "." + text.substr(0, sub_index);
     // update the sub_index to allow us to later remove the prefix from the message
